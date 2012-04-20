@@ -40,7 +40,6 @@ Spork.prefork do
   require 'cancan/matchers'
   require 'rufus/scheduler'
 
-
   if Spork.using_spork?
     ## other requires to reduce (improve) test load-time
     # as test with script tooked from http://www.opinionatedprogrammer.com/2011/02/profiling-spork-for-faster-start-up-time/
@@ -72,6 +71,9 @@ Spork.prefork do
   # in spec/support/ and its subdirectories.
   Dir[Rails.root.join("spec/support/**/*.rb")].each {|f| require f}
 
+
+  # flag counter to manually manipulate Garbage Collection in order to improve speed
+  counter = -1
   RSpec.configure do |config|
     config.include Devise::TestHelpers, :type => :controller
 
@@ -101,6 +103,20 @@ Spork.prefork do
     # automatically. This will be the default behavior in future versions of
     # rspec-rails.
     config.infer_base_class_for_anonymous_controllers = false
+
+    # manually manipulate Garbage Collection in order to improve test speed
+    config.after(:each) do
+      counter += 1
+      if counter > 9
+        GC.enable
+        GC.start
+        GC.disable
+        counter = 0
+      end
+    end
+    config.after(:suite) do
+      counter = 0
+    end
   end
 
   Tire.configure do
@@ -111,6 +127,14 @@ Spork.prefork do
 end
 
 Spork.each_run do
+  # manually manipulage GC in order to improve speed
+  GC.disable
+
+  # use an 'in-memory' SQLite database
+  # and do not make noisy ouput to test output
+  ActiveRecord::Schema.verbose = false
+  load "#{Rails.root.to_s}/db/schema.rb"
+
   # Forces all threads to share the same connection. This works on
   # Capybara because it starts the web server in a thread.
   ActiveRecord::Base.shared_connection = ActiveRecord::Base.connection
