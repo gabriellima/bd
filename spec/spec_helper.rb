@@ -55,8 +55,31 @@ Spork.prefork do
   end
 
   # ver http://blog.plataformatec.com.br/2011/12/three-tips-to-improve-the-performance-of-your-test-suite/
-  Devise.stretches = 1
+  #Devise.stretches = 1
   Rails.logger.level = 4
+
+  # disable encryption of passwords in devise, let it be plain-text
+  module Devise
+    module Models
+      module DatabaseAuthenticatable
+
+        def valid_password?(password)
+          return false if encrypted_password.blank?
+
+          encrypted_password == password_digest(password)
+        end
+
+        protected
+
+        def password_digest(password)
+          password
+        end
+      end
+    end
+  end
+  Devise.setup do |config|
+    config.stretches = 0
+  end
 
   class ActiveRecord::Base
     mattr_accessor :shared_connection

@@ -26,3 +26,16 @@ with changes + spork
   real  1m25.760s
   user  0m1.490s
   sys 0m0.150s
+
+with changes + spork + devise_streches=0
+  Finished in 2697 minutes 29.93 seconds
+  200 examples, 2 failures
+
+  Failed examples:
+
+  rspec ./spec/acceptance/minhas_buscas_spec.rb:79 # Buscas as 2:00 o servico de mala direta envia emails
+  rspec ./spec/models/acesso_spec.rb:24 # Acesso gera nova estatistica todo dia as 23:58
+
+  real  1m25.033s
+  user  0m1.460s
+  sys 0m0.120s
